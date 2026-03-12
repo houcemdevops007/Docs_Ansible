@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TP 07 — Conditions (when) | Formation Ansible</title>
+  <meta name="description" content="TP 07 Ansible : Utiliser les conditions when pour adapter les tâches selon le contexte.">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/dracula.min.css" rel="stylesheet">
+  <link href="../assets/style.css" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-custom fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="../index.html"><span class="brand-icon"><i class="fas fa-terminal"></i></span> Ansible TPs</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" style="border-color:var(--border);"><span class="navbar-toggler-icon"></span></button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item"><a class="nav-link" href="../index.html"><i class="fas fa-home"></i> Accueil</a></li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">TPs 01-06</a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="../tp-01-installation/tp-01.html">TP 01 — Installation</a></li>
+            <li><a class="dropdown-item" href="../tp-02-inventaire/tp-02.html">TP 02 — Inventaire</a></li>
+            <li><a class="dropdown-item" href="../tp-03-adhoc/tp-03.html">TP 03 — Ad-Hoc</a></li>
+            <li><a class="dropdown-item" href="../tp-04-playbooks-base/tp-04.html">TP 04 — Playbooks</a></li>
+            <li><a class="dropdown-item" href="../tp-05-handlers/tp-05.html">TP 05 — Handlers</a></li>
+            <li><a class="dropdown-item" href="../tp-06-variables/tp-06.html">TP 06 — Variables</a></li>
+          </ul>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">TPs 07-12</a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item active" href="tp-07.html">TP 07 — Conditions</a></li>
+            <li><a class="dropdown-item" href="../tp-08-boucles/tp-08.html">TP 08 — Boucles</a></li>
+            <li><a class="dropdown-item" href="../tp-09-templates-jinja2/tp-09.html">TP 09 — Templates</a></li>
+            <li><a class="dropdown-item" href="../tp-10-vault/tp-10.html">TP 10 — Vault</a></li>
+            <li><a class="dropdown-item" href="../tp-11-playbooks-multiples/tp-11.html">TP 11 — Multi-Playbooks</a></li>
+            <li><a class="dropdown-item" href="../tp-12-roles/tp-12.html">TP 12 — Roles</a></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<section class="tp-hero">
+  <div class="container">
+    <span class="tp-number"><i class="fas fa-hashtag"></i> TP 07</span>
+    <h1>Conditions (when)</h1>
+    <p style="color:var(--text-secondary); max-width:700px;">Utiliser les conditions <code>when</code> pour adapter les tâches selon le type d'OS, le résultat d'une tâche précédente ou toute autre expression logique.</p>
+    <div class="meta-badges">
+      <span class="badge-level intermediate"><i class="fas fa-signal"></i> Intermédiaire</span>
+      <span class="badge-duration"><i class="fas fa-clock"></i> 40 minutes</span>
+    </div>
+  </div>
+</section>
+
+<section class="tp-content">
+  <div class="container">
+
+    <div class="section-block">
+      <h2><span class="section-icon"><i class="fas fa-bullseye"></i></span> Objectifs</h2>
+      <ul class="objective-list">
+        <li>Utiliser la directive <code>when</code> pour conditionner l'exécution des tâches</li>
+        <li>Combiner <code>register</code> et <code>when</code> pour réagir aux résultats de tâches</li>
+        <li>Utiliser <code>ignore_errors</code> pour continuer malgré les erreurs</li>
+        <li>Conditionner les actions selon la famille d'OS (<code>ansible_os_family</code>)</li>
+      </ul>
+    </div>
+
+    <div class="section-block">
+      <h2><span class="section-icon"><i class="fas fa-clipboard-check"></i></span> Prérequis</h2>
+      <ul><li>TPs 01 à 06 complétés, maîtrise des facts Ansible</li></ul>
+    </div>
+
+    <div class="section-block">
+      <h2><span class="section-icon"><i class="fas fa-list-ol"></i></span> Étapes de réalisation</h2>
+
+      <h3>🔄 Exemple 1 : Condition avec register + is failed</h3>
+
+      <div class="step-card">
+        <span class="step-number">1</span>
+        <h4>Tester l'existence d'un fichier et agir en conséquence</h4>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="file-name"><i class="fas fa-file-code"></i> when.yaml</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+          </div>
+          <pre><code class="language-yaml">---
+# Condition avec register + is failed
+# register capture le résultat de la tâche
+# when vérifie si la tâche précédente a échoué
+- name: exemple avec condition register
+  hosts: all
+  tasks:
+    # Tester si le fichier existe (la commande échoue si absent)
+    - name: tester si le fichier existe
+      shell: ls /home/ansadmin/resultat.txt
+      register: result
+      ignore_errors: true
+
+    # Créer le fichier uniquement s'il n'existe pas (échec de la tâche précédente)
+    - name: créer le fichier si absent
+      file:
+        path: /home/ansadmin/resultat.txt
+        state: touch
+      when: result is failed</code></pre>
+        </div>
+        <div class="console-output">
+<span class="output">TASK [tester si le fichier existe] ******************************************
+</span><span class="error">fatal: [192.168.1.10]: FAILED! => {"rc": 2, "stderr": "ls: cannot access..."}</span><span class="output">
+...ignoring
+
+TASK [créer le fichier si absent] *******************************************
+</span><span class="highlight">changed: [192.168.1.10]</span><span class="output"> ← Le fichier a été créé car le test a échoué</span>
+        </div>
+      </div>
+
+      <h3>🖥️ Exemple 2 : Condition selon l'OS</h3>
+
+      <div class="step-card">
+        <span class="step-number">2</span>
+        <h4>Installer le bon package selon la famille d'OS</h4>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="file-name"><i class="fas fa-file-code"></i> when1.yaml</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+          </div>
+          <pre><code class="language-yaml">---
+# Condition when avec ansible_os_family
+# Permet d'adapter les tâches selon le type d'OS
+- name: exemple avec condition when os_family
+  hosts: all
+  become: true
+  tasks:
+    # Installer httpd sur les systèmes RedHat/CentOS
+    - name: install httpd on centos
+      yum:
+        name: httpd
+        state: latest
+      when: ansible_os_family == "RedHat"
+
+    # Installer apache2 sur les systèmes Debian/Ubuntu
+    - name: install apache2 on ubuntu
+      apt:
+        name: apache2
+        state: latest
+      when: ansible_os_family == "Debian"</code></pre>
+        </div>
+        <div class="console-output">
+<span class="output">TASK [install httpd on centos] **********************************************
+</span><span class="highlight">skipping: [192.168.1.10]</span><span class="output"> ← Skipped car l'OS est Debian
+
+TASK [install apache2 on ubuntu] ********************************************
+</span><span class="highlight">changed: [192.168.1.10]</span><span class="output"> ← Exécuté car ansible_os_family == "Debian"</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="key-points">
+      <h3><i class="fas fa-lightbulb"></i> Points clés à retenir</h3>
+      <ul>
+        <li><strong><code>when</code></strong> est une directive de tâche qui conditionne l'exécution selon une expression booléenne.</li>
+        <li><strong><code>register</code></strong> capture le résultat d'une tâche dans une variable pour l'utiliser dans <code>when</code>.</li>
+        <li><strong><code>ignore_errors: true</code></strong> empêche l'arrêt du playbook si la tâche échoue.</li>
+        <li><strong>Tests Jinja2 :</strong> <code>is failed</code>, <code>is succeeded</code>, <code>is changed</code>, <code>is skipped</code>.</li>
+        <li><strong>Pas de <code>{{ }}</code></strong> dans les conditions <code>when</code> : on écrit directement <code>when: ansible_os_family == "Debian"</code>.</li>
+      </ul>
+    </div>
+
+    <div class="tp-nav">
+      <a href="../tp-06-variables/tp-06.html" class="btn-prev"><i class="fas fa-arrow-left"></i> TP 06 — Variables</a>
+      <a href="../tp-08-boucles/tp-08.html" class="btn-next">TP 08 — Boucles <i class="fas fa-arrow-right"></i></a>
+    </div>
+
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <p>Formation DevOps par la pratique — <span class="footer-brand">Ansible</span> — Logwire Consulting — Houcem KHLIFI</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script>
+hljs.highlightAll();
+function copyCode(btn) {
+  const code = btn.closest('.code-wrapper').querySelector('code').innerText;
+  navigator.clipboard.writeText(code).then(() => { btn.textContent = '✓ Copié'; setTimeout(() => btn.textContent = 'Copier', 2000); });
+}
+localStorage.setItem('tp-07-done', 'true');
+</script>
+</body>
+</html>

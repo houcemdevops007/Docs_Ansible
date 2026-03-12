@@ -1,0 +1,16 @@
+---
+# Exemple d'installation de packages via une liste YAML
+# Le module apt accepte directement une liste dans le paramètre name
+- name: exemple ansible list
+  hosts: all
+  become: true
+  vars:
+    OtherPackages:
+      - vim
+      - curl
+      - git
+  tasks:
+    - name: install packages
+      apt:
+        name: "{{ OtherPackages }}"
+        state: present

@@ -1,0 +1,11 @@
+---
+# Playbook principal (Master)
+# Orchestre le déploiement global via importations et inclusions
+- import_playbook: install-apache.yaml
+
+- name: install tomcat server
+  hosts: tomcat
+  become: true
+  tasks:
+    # Inclusion dynamique de fichiers de tâches
+    - include_tasks: tasks/install-task.yaml

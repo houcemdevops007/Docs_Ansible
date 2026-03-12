@@ -1,0 +1,6 @@
+---
+# Playbook de test basique pour le role
+- hosts: localhost
+  remote_user: root
+  roles:
+    - apache

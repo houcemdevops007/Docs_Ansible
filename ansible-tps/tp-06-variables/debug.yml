@@ -1,0 +1,11 @@
+---
+# Utilisation du module debug pour afficher des informations
+# Utile pour le diagnostic et la vérification des variables/facts
+# Le module debug ne modifie rien sur les hôtes cibles
+- name: exemple debug
+  hosts: all
+  tasks:
+    # Afficher un message avec des facts interpolés
+    - name: afficher la version OS
+      debug:
+        msg: "Le système est {{ ansible_os_family }} version {{ ansible_distribution_version }}"

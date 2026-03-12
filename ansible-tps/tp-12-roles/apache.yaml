@@ -1,0 +1,7 @@
+---
+# Playbook utilisant un role téléchargé depuis Ansible Galaxy
+- name: deploy apache using galaxy role
+  hosts: webservers
+  become: true
+  roles:
+    - geerlingguy.apache

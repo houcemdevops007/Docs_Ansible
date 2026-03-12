@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TP 04 — Premiers Playbooks | Formation Ansible</title>
+  <meta name="description" content="TP 04 Ansible : Créer et exécuter des playbooks pour installer Nginx et exécuter des commandes shell.">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/dracula.min.css" rel="stylesheet">
+  <link href="../assets/style.css" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-custom fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="../index.html"><span class="brand-icon"><i class="fas fa-terminal"></i></span> Ansible TPs</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" style="border-color:var(--border);"><span class="navbar-toggler-icon"></span></button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item"><a class="nav-link" href="../index.html"><i class="fas fa-home"></i> Accueil</a></li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">TPs 01-06</a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="../tp-01-installation/tp-01.html">TP 01 — Installation</a></li>
+            <li><a class="dropdown-item" href="../tp-02-inventaire/tp-02.html">TP 02 — Inventaire</a></li>
+            <li><a class="dropdown-item" href="../tp-03-adhoc/tp-03.html">TP 03 — Ad-Hoc</a></li>
+            <li><a class="dropdown-item active" href="tp-04.html">TP 04 — Playbooks</a></li>
+            <li><a class="dropdown-item" href="../tp-05-handlers/tp-05.html">TP 05 — Handlers</a></li>
+            <li><a class="dropdown-item" href="../tp-06-variables/tp-06.html">TP 06 — Variables</a></li>
+          </ul>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">TPs 07-12</a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="../tp-07-conditions/tp-07.html">TP 07 — Conditions</a></li>
+            <li><a class="dropdown-item" href="../tp-08-boucles/tp-08.html">TP 08 — Boucles</a></li>
+            <li><a class="dropdown-item" href="../tp-09-templates-jinja2/tp-09.html">TP 09 — Templates</a></li>
+            <li><a class="dropdown-item" href="../tp-10-vault/tp-10.html">TP 10 — Vault</a></li>
+            <li><a class="dropdown-item" href="../tp-11-playbooks-multiples/tp-11.html">TP 11 — Multi-Playbooks</a></li>
+            <li><a class="dropdown-item" href="../tp-12-roles/tp-12.html">TP 12 — Roles</a></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<section class="tp-hero">
+  <div class="container">
+    <span class="tp-number"><i class="fas fa-hashtag"></i> TP 04</span>
+    <h1>Premiers Playbooks</h1>
+    <p style="color:var(--text-secondary); max-width:700px;">Écrire et exécuter vos premiers playbooks YAML pour installer Nginx et lancer des commandes shell de manière automatisée.</p>
+    <div class="meta-badges">
+      <span class="badge-level"><i class="fas fa-signal"></i> Débutant</span>
+      <span class="badge-duration"><i class="fas fa-clock"></i> 45 minutes</span>
+    </div>
+  </div>
+</section>
+
+<section class="tp-content">
+  <div class="container">
+
+    <div class="section-block">
+      <h2><span class="section-icon"><i class="fas fa-bullseye"></i></span> Objectifs</h2>
+      <ul class="objective-list">
+        <li>Comprendre la structure d'un playbook YAML</li>
+        <li>Créer un playbook pour installer et démarrer Nginx</li>
+        <li>Créer un playbook utilisant le module shell</li>
+        <li>Comprendre la directive <code>become: true</code> pour l'élévation de privilèges</li>
+        <li>Exécuter un playbook avec <code>ansible-playbook</code></li>
+      </ul>
+    </div>
+
+    <div class="section-block">
+      <h2><span class="section-icon"><i class="fas fa-clipboard-check"></i></span> Prérequis</h2>
+      <ul>
+        <li>TPs 01 à 03 complétés</li>
+        <li>Inventaire fonctionnel</li>
+      </ul>
+    </div>
+
+    <div class="section-block">
+      <h2><span class="section-icon"><i class="fas fa-sitemap"></i></span> Structure d'un Playbook</h2>
+      <div class="architecture-box">
+playbook.yaml
+├── name: "Nom du play"        # Description du play
+├── hosts: all                 # Cible (groupe ou hôtes)
+├── become: true               # Élévation de privilèges (sudo)
+└── tasks:                     # Liste ordonnée de tâches
+    ├── name: "Tâche 1"        # Description
+    │   module:                # Module Ansible à utiliser
+    │     paramètre: valeur    # Arguments du module
+    └── name: "Tâche 2"
+        module:
+          paramètre: valeur</div>
+    </div>
+
+    <div class="section-block">
+      <h2><span class="section-icon"><i class="fas fa-list-ol"></i></span> Étapes de réalisation</h2>
+
+      <div class="step-card">
+        <span class="step-number">1</span>
+        <h4>Playbook d'installation Nginx</h4>
+        <p>Créez le fichier <code>nginx.yaml</code> pour installer et démarrer Nginx sur toutes les machines :</p>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="file-name"><i class="fas fa-file-code"></i> nginx.yaml</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+          </div>
+          <pre><code class="language-yaml">---
+# Playbook d'installation et démarrage de Nginx
+# Nécessite les privilèges root (become: true)
+- name: Install nginx
+  hosts: all
+  become: true
+  tasks:
+    # Installer la dernière version de nginx via apt
+    - name: Install nginx is at the latest version
+      apt:
+        name: nginx
+        state: latest
+
+    # Démarrer le service nginx
+    - name: start nginx
+      service:
+        name: nginx
+        state: started</code></pre>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <span class="step-number">2</span>
+        <h4>Exécuter le playbook Nginx</h4>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="file-name"><i class="fas fa-terminal"></i> Terminal</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+          </div>
+          <pre><code class="language-bash"># Exécuter le playbook
+ansible-playbook nginx.yaml</code></pre>
+        </div>
+        <div class="console-output">
+<span class="prompt">ansadmin@server:~$</span> ansible-playbook nginx.yaml
+
+<span class="output">PLAY [Install nginx] ********************************************************
+
+TASK [Gathering Facts] ******************************************************
+</span><span class="highlight">ok: [192.168.1.10]
+ok: [192.168.1.11]</span><span class="output">
+
+TASK [Install nginx is at the latest version] *******************************
+</span><span class="highlight">changed: [192.168.1.10]
+changed: [192.168.1.11]</span><span class="output">
+
+TASK [start nginx] **********************************************************
+</span><span class="highlight">changed: [192.168.1.10]
+changed: [192.168.1.11]</span><span class="output">
+
+PLAY RECAP ******************************************************************
+192.168.1.10 : </span><span class="highlight">ok=3</span><span class="output"> changed=2 unreachable=0 failed=0 skipped=0
+192.168.1.11 : </span><span class="highlight">ok=3</span><span class="output"> changed=2 unreachable=0 failed=0 skipped=0</span>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <span class="step-number">3</span>
+        <h4>Playbook avec commandes shell (sans become)</h4>
+        <p>Créez <code>shell.yml</code> pour exécuter des commandes shell en tant qu'utilisateur normal :</p>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="file-name"><i class="fas fa-file-code"></i> shell.yml</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+          </div>
+          <pre><code class="language-yaml">---
+# Playbook exemple sans élévation de privilèges
+# Les commandes s'exécutent en tant qu'ansadmin
+- name: exemple sans become
+  hosts: all
+  tasks:
+    # Récupérer la version du système d'exploitation
+    - name: version OS
+      shell: uname -a >> /home/ansadmin/resultat.txt
+
+    # Identifier l'utilisateur courant
+    - name: c'est qui??
+      shell: whoami >> /home/ansadmin/resultat.txt</code></pre>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <span class="step-number">4</span>
+        <h4>Exécuter le playbook shell</h4>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="file-name"><i class="fas fa-terminal"></i> Terminal</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+          </div>
+          <pre><code class="language-bash"># Exécuter sans become (utilisateur ansadmin)
+ansible-playbook shell.yml
+
+# Exécuter avec become via la ligne de commande
+ansible-playbook shell.yml -b</code></pre>
+        </div>
+        <div class="info-box">
+          <i class="fas fa-info-circle"></i> <strong>Différence clé :</strong> <code>become: true</code> dans le playbook = toujours en root. L'option <code>-b</code> en ligne de commande = pontuel, sans modifier le fichier.
+        </div>
+      </div>
+    </div>
+
+    <div class="key-points">
+      <h3><i class="fas fa-lightbulb"></i> Points clés à retenir</h3>
+      <ul>
+        <li><strong>Un playbook</strong> est un fichier YAML contenant un ou plusieurs "plays" (ensembles de tâches).</li>
+        <li><strong><code>become: true</code></strong> dans le playbook applique sudo à toutes les tâches du play.</li>
+        <li><strong><code>-b</code> en CLI</strong> permet d'activer become ponctuellement sans modifier le playbook.</li>
+        <li><strong>L'idempotence</strong> : relancer le même playbook ne change rien si l'état est déjà atteint (changed → ok).</li>
+        <li><strong>Le PLAY RECAP</strong> résume le nombre de tâches ok, changed, failed pour chaque hôte.</li>
+      </ul>
+    </div>
+
+    <div class="tp-nav">
+      <a href="../tp-03-adhoc/tp-03.html" class="btn-prev"><i class="fas fa-arrow-left"></i> TP 03 — Ad-Hoc</a>
+      <a href="../tp-05-handlers/tp-05.html" class="btn-next">TP 05 — Handlers <i class="fas fa-arrow-right"></i></a>
+    </div>
+
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <p>Formation DevOps par la pratique — <span class="footer-brand">Ansible</span> — Logwire Consulting — Houcem KHLIFI</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script>
+hljs.highlightAll();
+function copyCode(btn) {
+  const code = btn.closest('.code-wrapper').querySelector('code').innerText;
+  navigator.clipboard.writeText(code).then(() => { btn.textContent = '✓ Copié'; setTimeout(() => btn.textContent = 'Copier', 2000); });
+}
+localStorage.setItem('tp-04-done', 'true');
+</script>
+</body>
+</html>

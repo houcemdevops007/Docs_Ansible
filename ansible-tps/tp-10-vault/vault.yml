@@ -1,0 +1,4 @@
+# Variables sensibles à chiffrer avec ansible-vault encrypt
+db_password: "SuperSecret123"
+api_key: "abc123xyz456"
+admin_password: "AdminPass2024"

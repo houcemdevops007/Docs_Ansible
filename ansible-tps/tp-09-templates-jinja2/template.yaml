@@ -1,0 +1,15 @@
+---
+# Playbook utilisant le module template
+# Permet de générer des fichiers dynamiques sur les hôtes cibles
+- name: exemple avec template
+  hosts: all
+  become: true
+  vars:
+    file_version: "2.0"
+  tasks:
+    # Déploiement d'un fichier index.html généré à partir d'un template .j2
+    - name: ajout index.html dynamique
+      template:
+        src: templates/index.html.j2
+        dest: /var/www/html/index.html
+        mode: "0777"

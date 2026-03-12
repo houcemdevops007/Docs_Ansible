@@ -1,0 +1,17 @@
+---
+# Playbook utilisant des variables chiffrées avec Ansible Vault
+# Le mot de passe Vault doit être fourni à l'exécution (--ask-vault-pass)
+- name: exemple avec vault
+  hosts: all
+  become: true
+  vars_files:
+    - vault.yml
+  tasks:
+    # Affichage d'une variable sensible via le module debug
+    - name: afficher le message avec variable chiffrée
+      debug:
+        msg: "Le mot de passe DB est {{ db_password }}"
+
+    # Simulation d'utilisation dans un fichier de config
+    - name: créer un fichier de config fictif avec variable vault
+      shell: "echo 'DB_PASS={{ db_password }}' > /tmp/app_config.env"

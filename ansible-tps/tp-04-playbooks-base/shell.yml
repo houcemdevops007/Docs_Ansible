@@ -1,0 +1,13 @@
+---
+# Playbook exemple sans élévation de privilèges
+# Les commandes s'exécutent en tant qu'utilisateur ansadmin
+- name: exemple sans become
+  hosts: all
+  tasks:
+    # Récupérer la version du système d'exploitation
+    - name: version OS
+      shell: uname -a >> /home/ansadmin/resultat.txt
+
+    # Identifier l'utilisateur courant
+    - name: c'est qui??
+      shell: whoami >> /home/ansadmin/resultat.txt

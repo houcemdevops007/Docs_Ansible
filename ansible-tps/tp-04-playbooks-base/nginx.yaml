@@ -1,0 +1,19 @@
+---
+# Playbook d'installation et démarrage de Nginx
+# Cible : tous les hôtes de l'inventaire
+# Nécessite les privilèges root (become: true)
+- name: Install nginx
+  hosts: all
+  become: true
+  tasks:
+    # Installer la dernière version de nginx via le gestionnaire apt
+    - name: Install nginx is at the latest version
+      apt:
+        name: nginx
+        state: latest
+
+    # Démarrer le service nginx après installation
+    - name: start nginx
+      service:
+        name: nginx
+        state: started

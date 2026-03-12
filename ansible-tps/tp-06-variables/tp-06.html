@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TP 06 — Variables & Ansible Facts | Formation Ansible</title>
+  <meta name="description" content="TP 06 Ansible : Utiliser les variables, les Ansible Facts et le module debug.">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/dracula.min.css" rel="stylesheet">
+  <link href="../assets/style.css" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-custom fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="../index.html"><span class="brand-icon"><i class="fas fa-terminal"></i></span> Ansible TPs</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" style="border-color:var(--border);"><span class="navbar-toggler-icon"></span></button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item"><a class="nav-link" href="../index.html"><i class="fas fa-home"></i> Accueil</a></li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">TPs 01-06</a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="../tp-01-installation/tp-01.html">TP 01 — Installation</a></li>
+            <li><a class="dropdown-item" href="../tp-02-inventaire/tp-02.html">TP 02 — Inventaire</a></li>
+            <li><a class="dropdown-item" href="../tp-03-adhoc/tp-03.html">TP 03 — Ad-Hoc</a></li>
+            <li><a class="dropdown-item" href="../tp-04-playbooks-base/tp-04.html">TP 04 — Playbooks</a></li>
+            <li><a class="dropdown-item" href="../tp-05-handlers/tp-05.html">TP 05 — Handlers</a></li>
+            <li><a class="dropdown-item active" href="tp-06.html">TP 06 — Variables</a></li>
+          </ul>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">TPs 07-12</a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="../tp-07-conditions/tp-07.html">TP 07 — Conditions</a></li>
+            <li><a class="dropdown-item" href="../tp-08-boucles/tp-08.html">TP 08 — Boucles</a></li>
+            <li><a class="dropdown-item" href="../tp-09-templates-jinja2/tp-09.html">TP 09 — Templates</a></li>
+            <li><a class="dropdown-item" href="../tp-10-vault/tp-10.html">TP 10 — Vault</a></li>
+            <li><a class="dropdown-item" href="../tp-11-playbooks-multiples/tp-11.html">TP 11 — Multi-Playbooks</a></li>
+            <li><a class="dropdown-item" href="../tp-12-roles/tp-12.html">TP 12 — Roles</a></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<section class="tp-hero">
+  <div class="container">
+    <span class="tp-number"><i class="fas fa-hashtag"></i> TP 06</span>
+    <h1>Variables & Ansible Facts</h1>
+    <p style="color:var(--text-secondary); max-width:700px;">Définir et utiliser des variables dans les playbooks, explorer les facts système collectés automatiquement et utiliser le module debug pour le diagnostic.</p>
+    <div class="meta-badges">
+      <span class="badge-level intermediate"><i class="fas fa-signal"></i> Intermédiaire</span>
+      <span class="badge-duration"><i class="fas fa-clock"></i> 45 minutes</span>
+    </div>
+  </div>
+</section>
+
+<section class="tp-content">
+  <div class="container">
+
+    <div class="section-block">
+      <h2><span class="section-icon"><i class="fas fa-bullseye"></i></span> Objectifs</h2>
+      <ul class="objective-list">
+        <li>Définir des variables dans un playbook avec la directive <code>vars</code></li>
+        <li>Utiliser la syntaxe Jinja2 <code>{{ variable }}</code> pour référencer les variables</li>
+        <li>Explorer les Ansible Facts collectés par le module <code>setup</code></li>
+        <li>Filtrer les facts avec le paramètre <code>filter</code></li>
+        <li>Utiliser le module <code>debug</code> pour afficher des informations</li>
+      </ul>
+    </div>
+
+    <div class="section-block">
+      <h2><span class="section-icon"><i class="fas fa-clipboard-check"></i></span> Prérequis</h2>
+      <ul><li>TPs 01 à 05 complétés</li></ul>
+    </div>
+
+    <div class="section-block">
+      <h2><span class="section-icon"><i class="fas fa-list-ol"></i></span> Étapes de réalisation</h2>
+
+      <h3>📝 Partie 1 : Variables utilisateur</h3>
+
+      <div class="step-card">
+        <span class="step-number">1</span>
+        <h4>Playbook avec variables définies dans vars</h4>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="file-name"><i class="fas fa-file-code"></i> variable.yaml</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+          </div>
+          <pre><code class="language-yaml">---
+# Exemple d'utilisation des variables dans un playbook
+# Les variables sont définies dans la section vars
+- name: example avec les variables
+  hosts: all
+  become: true
+  vars:
+    - var1: "Hello DevOps"
+    - var2: "Good Morning DevOps"
+  tasks:
+    # Utilisation des variables avec la syntaxe Jinja2 {{ }}
+    - name: echo text
+      shell: echo "var1 is {{ var1 }}, but var2 is {{ var2 }}" >> /home/ansadmin/example-variable.txt</code></pre>
+        </div>
+        <div class="console-output">
+<span class="prompt">ansadmin@server:~$</span> ansible-playbook variable.yaml
+<span class="output">TASK [echo text] ********************************************************
+changed: [192.168.1.10]
+
+PLAY RECAP **************************************************************
+192.168.1.10 : ok=2 changed=1</span>
+
+<span class="prompt">ansadmin@server:~$</span> ssh ansadmin@192.168.1.10 "cat /home/ansadmin/example-variable.txt"
+<span class="highlight">var1 is Hello DevOps, but var2 is Good Morning DevOps</span>
+        </div>
+      </div>
+
+      <h3>🔍 Partie 2 : Ansible Facts</h3>
+
+      <div class="step-card">
+        <span class="step-number">2</span>
+        <h4>Explorer les facts avec le module setup</h4>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="file-name"><i class="fas fa-terminal"></i> Terminal</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+          </div>
+          <pre><code class="language-bash"># Afficher TOUS les facts d'un hôte (très verbeux)
+ansible all -m setup
+
+# Filtrer par famille d'OS
+ansible all -m setup -a "filter=*family*"
+
+# Filtrer les adresses IPv4
+ansible all -m setup -a "filter=ansible_all_ipv4_addresses"</code></pre>
+        </div>
+        <div class="console-output">
+<span class="prompt">ansadmin@server:~$</span> ansible all -m setup -a "filter=*family*"
+<span class="output">192.168.1.10 | SUCCESS => {
+    "ansible_facts": {
+        </span><span class="highlight">"ansible_os_family": "Debian"</span><span class="output">
+    }
+}</span>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <span class="step-number">3</span>
+        <h4>Utiliser les facts dans un playbook</h4>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="file-name"><i class="fas fa-file-code"></i> fact.yml</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+          </div>
+          <pre><code class="language-yaml">---
+# Utilisation des Ansible Facts dans un playbook
+# Les facts sont collectés automatiquement au début du play (Gathering Facts)
+- name: example avec les facts
+  hosts: all
+  become: true
+  tasks:
+    # Utiliser le fact ansible_os_family pour créer un fichier nommé dynamiquement
+    - name: echo os family
+      shell: echo "{{ ansible_os_family }}" >> /home/ansadmin/{{ ansible_os_family }}.txt</code></pre>
+        </div>
+      </div>
+
+      <h3>🐛 Partie 3 : Module debug</h3>
+
+      <div class="step-card">
+        <span class="step-number">4</span>
+        <h4>Afficher des informations avec debug</h4>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="file-name"><i class="fas fa-file-code"></i> debug.yml</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+          </div>
+          <pre><code class="language-yaml">---
+# Utilisation du module debug pour afficher des informations
+# Utile pour le diagnostic et la vérification des variables
+- name: exemple debug
+  hosts: all
+  tasks:
+    # Afficher un message avec des facts interpolés
+    - name: afficher la version OS
+      debug:
+        msg: "Le système est {{ ansible_os_family }} version {{ ansible_distribution_version }}"</code></pre>
+        </div>
+        <div class="console-output">
+<span class="prompt">ansadmin@server:~$</span> ansible-playbook debug.yml
+<span class="output">TASK [afficher la version OS] ************************************************
+ok: [192.168.1.10] => {
+    "msg": "</span><span class="highlight">Le système est Debian version 22.04</span><span class="output">"
+}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="key-points">
+      <h3><i class="fas fa-lightbulb"></i> Points clés à retenir</h3>
+      <ul>
+        <li><strong>Les variables</strong> sont définies avec <code>vars:</code> et référencées avec <code>{{ nom_variable }}</code>.</li>
+        <li><strong>Les Ansible Facts</strong> sont collectés automatiquement par le module <code>setup</code> au début de chaque play.</li>
+        <li><strong>Facts courants :</strong> <code>ansible_os_family</code>, <code>ansible_hostname</code>, <code>ansible_default_ipv4.address</code>, <code>ansible_distribution_version</code>.</li>
+        <li><strong>Le module debug</strong> est essentiel pour le diagnostic : il affiche des messages sans modifier les hôtes.</li>
+        <li><strong>Le filtre setup</strong> (<code>-a "filter=*pattern*"</code>) réduit la sortie aux facts pertinents.</li>
+      </ul>
+    </div>
+
+    <div class="tp-nav">
+      <a href="../tp-05-handlers/tp-05.html" class="btn-prev"><i class="fas fa-arrow-left"></i> TP 05 — Handlers</a>
+      <a href="../tp-07-conditions/tp-07.html" class="btn-next">TP 07 — Conditions <i class="fas fa-arrow-right"></i></a>
+    </div>
+
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <p>Formation DevOps par la pratique — <span class="footer-brand">Ansible</span> — Logwire Consulting — Houcem KHLIFI</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script>
+hljs.highlightAll();
+function copyCode(btn) {
+  const code = btn.closest('.code-wrapper').querySelector('code').innerText;
+  navigator.clipboard.writeText(code).then(() => { btn.textContent = '✓ Copié'; setTimeout(() => btn.textContent = 'Copier', 2000); });
+}
+localStorage.setItem('tp-06-done', 'true');
+</script>
+</body>
+</html>

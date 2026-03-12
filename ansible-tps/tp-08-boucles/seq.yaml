@@ -1,0 +1,12 @@
+---
+# Exemple d'utilisation de with_sequence
+# Génère une suite de nombres pour nommer des ressources
+- name: exemple avec sequence
+  hosts: all
+  tasks:
+    - name: creation de liste des fichiers numerotes
+      file:
+        path: "DevOps{{ item }}.txt"
+        state: touch
+        mode: "0775"
+      with_sequence: start=20 end=27

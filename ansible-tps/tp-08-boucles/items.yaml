@@ -1,0 +1,16 @@
+---
+# Exemple d'utilisation de with_items
+# Permet de créer plusieurs fichiers en une seule tâche
+- name: exemple avec items
+  hosts: all
+  tasks:
+    - name: creation de liste des fichiers
+      file:
+        path: "{{ item }}"
+        state: touch
+        mode: "0775"
+      with_items:
+        - init1.txt
+        - init2.txt
+        - init3.txt
+        - init4.txt

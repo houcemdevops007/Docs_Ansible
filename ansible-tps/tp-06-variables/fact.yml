@@ -1,0 +1,11 @@
+---
+# Utilisation des Ansible Facts dans un playbook
+# Les facts sont collectés automatiquement au début du play (Gathering Facts)
+# Le fact ansible_os_family contient la famille de l'OS (Debian, RedHat, etc.)
+- name: example avec les facts
+  hosts: all
+  become: true
+  tasks:
+    # Utiliser le fact ansible_os_family pour créer un fichier nommé dynamiquement
+    - name: echo os family
+      shell: echo "{{ ansible_os_family }}" >> /home/ansadmin/{{ ansible_os_family }}.txt

@@ -1,0 +1,5 @@
+---
+# Variables par défaut (basse priorité)
+apache_package: apache2
+apache_service: apache2
+apache_enabled: true

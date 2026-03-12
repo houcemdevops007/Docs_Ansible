@@ -1,0 +1,21 @@
+<html>
+  <body>
+    <h2>This computer hostname is {{ ansible_hostname }}</h2>
+    <h2>The OS of this computer is {{ ansible_os_family }}</h2>
+    <h2>IP Address: {{ ansible_default_ipv4.address }}</h2>
+    <h2>This file version is {{ file_version }}</h2>
+
+    {% if ansible_os_family == "Debian" %}
+      <p>Système Ubuntu/Debian détecté</p>
+    {% else %}
+      <p>Système RedHat/CentOS détecté</p>
+    {% endif %}
+
+    <h3>Interfaces Réseau :</h3>
+    <ul>
+    {% for interface in ansible_interfaces %}
+      <li>{{ interface }}</li>
+    {% endfor %}
+    </ul>
+  </body>
+</html>

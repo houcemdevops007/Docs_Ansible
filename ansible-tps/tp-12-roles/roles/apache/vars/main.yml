@@ -1,0 +1,5 @@
+---
+# Variables spécifiques au role (haute priorité)
+http_port: 8080
+site_name: "Mon Super Site Ansible"
+doc_root: /var/www/html

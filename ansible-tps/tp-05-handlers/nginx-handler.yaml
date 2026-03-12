@@ -1,0 +1,27 @@
+---
+# Playbook avec handler pour Nginx
+# Le handler restart_nginx ne s'exécute que si le fichier index.html a changé
+- name: Configure webserver with nginx
+  hosts: all
+  become: True
+  tasks:
+    # Installer nginx avec mise à jour du cache apt
+    - name: install nginx
+      apt:
+        name: nginx
+        update_cache: yes
+
+    # Copier le fichier index.html
+    # notify déclenche le handler si le fichier a été modifié
+    - name: copy index.html
+      template:
+        src: index.html
+        dest: /var/www/html/index.html
+      notify: restart_nginx
+
+  # Les handlers s'exécutent uniquement si notifiés (état changed)
+  handlers:
+    - name: restart_nginx
+      service:
+        name: nginx
+        state: restarted

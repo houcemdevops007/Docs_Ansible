@@ -1,0 +1,7 @@
+---
+# Playbook utilisant le role personnalisé Apache
+- name: deploy web servers using roles
+  hosts: webservers
+  become: true
+  roles:
+    - apache

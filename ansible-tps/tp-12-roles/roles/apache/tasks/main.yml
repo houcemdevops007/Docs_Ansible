@@ -1,0 +1,18 @@
+---
+# Tâches principales du role Apache
+- name: install apache package
+  apt:
+    name: "{{ apache_package }}"
+    state: latest
+
+- name: deploy custom index.html from template
+  template:
+    src: index.html.j2
+    dest: /var/www/html/index.html
+  notify: restart_apache
+
+- name: ensure apache is running
+  service:
+    name: "{{ apache_service }}"
+    state: started
+    enabled: yes

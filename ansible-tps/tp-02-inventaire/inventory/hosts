@@ -1,0 +1,16 @@
+# Groupe des serveurs web (Apache/Nginx)
+[webservers]
+192.168.1.10 ansible_user=ansadmin
+192.168.1.11 ansible_user=ansadmin
+
+# Groupe du serveur d'applications Tomcat
+[tomcat]
+192.168.1.20 ansible_user=ansadmin
+
+# Groupe des serveurs de base de données
+[dbservers]
+192.168.1.30 ansible_user=ansadmin
+
+# Variables communes à tous les hôtes
+[all:vars]
+ansible_ssh_private_key_file=~/.ssh/id_rsa

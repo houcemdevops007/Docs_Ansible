@@ -1,0 +1,11 @@
+---
+# Liste de tâches Tomcat pour inclusion dynamique
+- name: install tomcat9
+  apt:
+    name: tomcat9
+    state: latest
+- name: start tomcat9
+  service:
+    name: tomcat9
+    state: started
+    enabled: yes

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TP 05 — Handlers Ansible | Formation Ansible</title>
+  <meta name="description" content="TP 05 Ansible : Comprendre et utiliser les handlers pour déclencher des actions conditionnelles.">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/dracula.min.css" rel="stylesheet">
+  <link href="../assets/style.css" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-custom fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="../index.html"><span class="brand-icon"><i class="fas fa-terminal"></i></span> Ansible TPs</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" style="border-color:var(--border);"><span class="navbar-toggler-icon"></span></button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item"><a class="nav-link" href="../index.html"><i class="fas fa-home"></i> Accueil</a></li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">TPs 01-06</a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="../tp-01-installation/tp-01.html">TP 01 — Installation</a></li>
+            <li><a class="dropdown-item" href="../tp-02-inventaire/tp-02.html">TP 02 — Inventaire</a></li>
+            <li><a class="dropdown-item" href="../tp-03-adhoc/tp-03.html">TP 03 — Ad-Hoc</a></li>
+            <li><a class="dropdown-item" href="../tp-04-playbooks-base/tp-04.html">TP 04 — Playbooks</a></li>
+            <li><a class="dropdown-item active" href="tp-05.html">TP 05 — Handlers</a></li>
+            <li><a class="dropdown-item" href="../tp-06-variables/tp-06.html">TP 06 — Variables</a></li>
+          </ul>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">TPs 07-12</a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="../tp-07-conditions/tp-07.html">TP 07 — Conditions</a></li>
+            <li><a class="dropdown-item" href="../tp-08-boucles/tp-08.html">TP 08 — Boucles</a></li>
+            <li><a class="dropdown-item" href="../tp-09-templates-jinja2/tp-09.html">TP 09 — Templates</a></li>
+            <li><a class="dropdown-item" href="../tp-10-vault/tp-10.html">TP 10 — Vault</a></li>
+            <li><a class="dropdown-item" href="../tp-11-playbooks-multiples/tp-11.html">TP 11 — Multi-Playbooks</a></li>
+            <li><a class="dropdown-item" href="../tp-12-roles/tp-12.html">TP 12 — Roles</a></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<section class="tp-hero">
+  <div class="container">
+    <span class="tp-number"><i class="fas fa-hashtag"></i> TP 05</span>
+    <h1>Handlers Ansible</h1>
+    <p style="color:var(--text-secondary); max-width:700px;">Comprendre et utiliser les handlers pour déclencher des actions (comme le redémarrage d'un service) uniquement lorsqu'un changement a été effectué.</p>
+    <div class="meta-badges">
+      <span class="badge-level intermediate"><i class="fas fa-signal"></i> Intermédiaire</span>
+      <span class="badge-duration"><i class="fas fa-clock"></i> 35 minutes</span>
+    </div>
+  </div>
+</section>
+
+<section class="tp-content">
+  <div class="container">
+
+    <div class="section-block">
+      <h2><span class="section-icon"><i class="fas fa-bullseye"></i></span> Objectifs</h2>
+      <ul class="objective-list">
+        <li>Comprendre le concept de handler et la directive <code>notify</code></li>
+        <li>Créer un playbook avec handler pour redémarrer Nginx après modification</li>
+        <li>Observer l'idempotence : le handler ne s'exécute que si un changement a eu lieu</li>
+        <li>Utiliser le module <code>template</code> pour copier des fichiers</li>
+      </ul>
+    </div>
+
+    <div class="section-block">
+      <h2><span class="section-icon"><i class="fas fa-clipboard-check"></i></span> Prérequis</h2>
+      <ul><li>TPs 01 à 04 complétés, Nginx installé sur les hôtes cibles</li></ul>
+    </div>
+
+    <div class="section-block">
+      <h2><span class="section-icon"><i class="fas fa-project-diagram"></i></span> Fonctionnement des Handlers</h2>
+      <div class="architecture-box">
+tasks:                            handlers:
+┌─────────────────────┐           ┌─────────────────────┐
+│  install nginx      │           │  restart_nginx      │
+│  (changed/ok)       │           │  service:           │
+└─────────────────────┘           │    name: nginx      │
+                                  │    state: restarted │
+┌─────────────────────┐  notify   └─────────────────────┘
+│  copy index.html    │──────────────────▶  (exécuté à la fin
+│  (changed → notify) │                     du play si notifié)
+└─────────────────────┘
+
+⚠️ Un handler n'est exécuté que si :
+   1. La tâche qui le notifie a le statut "changed"
+   2. Il est exécuté UNE SEULE FOIS à la fin du play,
+      même s'il est notifié plusieurs fois</div>
+    </div>
+
+    <div class="section-block">
+      <h2><span class="section-icon"><i class="fas fa-list-ol"></i></span> Étapes de réalisation</h2>
+
+      <div class="step-card">
+        <span class="step-number">1</span>
+        <h4>Créer le fichier index.html</h4>
+        <p>Ce fichier sera copié vers les serveurs web cibles :</p>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="file-name"><i class="fas fa-file-code"></i> index.html</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+          </div>
+          <pre><code class="language-html">&lt;html&gt;
+  &lt;body&gt;
+    &lt;h1&gt;Serveur configuré par Ansible - TP Handlers&lt;/h1&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <span class="step-number">2</span>
+        <h4>Créer le playbook avec handler</h4>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="file-name"><i class="fas fa-file-code"></i> nginx-handler.yaml</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+          </div>
+          <pre><code class="language-yaml">---
+# Playbook avec handler : le restart ne se fait que si le fichier a changé
+- name: Configure webserver with nginx
+  hosts: all
+  become: True
+  tasks:
+    # Installer nginx (mise à jour du cache apt)
+    - name: install nginx
+      apt:
+        name: nginx
+        update_cache: yes
+
+    # Copier le fichier index.html vers le serveur
+    # Si le fichier change → notify déclenche le handler
+    - name: copy index.html
+      template:
+        src: index.html
+        dest: /var/www/html/index.html
+      notify: restart_nginx
+
+  # Les handlers sont déclenchés uniquement si notifiés
+  handlers:
+    - name: restart_nginx
+      service:
+        name: nginx
+        state: restarted</code></pre>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <span class="step-number">3</span>
+        <h4>Première exécution (changement détecté)</h4>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="file-name"><i class="fas fa-terminal"></i> Terminal</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+          </div>
+          <pre><code class="language-bash">ansible-playbook nginx-handler.yaml</code></pre>
+        </div>
+        <div class="console-output">
+<span class="output">TASK [copy index.html] ****************************************************
+</span><span class="highlight">changed: [192.168.1.10]</span><span class="output">
+
+RUNNING HANDLER [restart_nginx] *******************************************
+</span><span class="highlight">changed: [192.168.1.10]</span><span class="output">  ← Le handler s'exécute car le fichier a été modifié</span>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <span class="step-number">4</span>
+        <h4>Deuxième exécution (aucun changement)</h4>
+        <p>Relancez le même playbook pour voir l'idempotence en action :</p>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="file-name"><i class="fas fa-terminal"></i> Terminal</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+          </div>
+          <pre><code class="language-bash">ansible-playbook nginx-handler.yaml</code></pre>
+        </div>
+        <div class="console-output">
+<span class="output">TASK [copy index.html] ****************************************************
+</span><span class="highlight">ok: [192.168.1.10]</span><span class="output">  ← Fichier inchangé, pas de notify
+
+</span><span class="output">PLAY RECAP ****************************************************************
+192.168.1.10 : ok=3 </span><span class="highlight">changed=0</span><span class="output"> ← Le handler ne s'est PAS exécuté</span>
+        </div>
+        <div class="info-box">
+          <i class="fas fa-info-circle"></i> <strong>Idempotence :</strong> Le handler <code>restart_nginx</code> ne s'est pas exécuté la 2e fois car la tâche <code>copy index.html</code> n'a pas modifié le fichier (état déjà conforme).
+        </div>
+      </div>
+    </div>
+
+    <div class="key-points">
+      <h3><i class="fas fa-lightbulb"></i> Points clés à retenir</h3>
+      <ul>
+        <li><strong>Les handlers</strong> sont des tâches spéciales déclenchées par <code>notify</code>.</li>
+        <li><strong>Un handler n'est exécuté</strong> que si la tâche qui le notifie a le statut <code>changed</code>.</li>
+        <li><strong>Les handlers s'exécutent à la fin du play</strong>, après toutes les tâches — pas immédiatement après le notify.</li>
+        <li><strong>Un handler notifié plusieurs fois</strong> ne s'exécute qu'une seule fois.</li>
+        <li><strong>Cas d'usage typique :</strong> redémarrer un service après modification de sa configuration.</li>
+      </ul>
+    </div>
+
+    <div class="tp-nav">
+      <a href="../tp-04-playbooks-base/tp-04.html" class="btn-prev"><i class="fas fa-arrow-left"></i> TP 04 — Playbooks</a>
+      <a href="../tp-06-variables/tp-06.html" class="btn-next">TP 06 — Variables <i class="fas fa-arrow-right"></i></a>
+    </div>
+
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <p>Formation DevOps par la pratique — <span class="footer-brand">Ansible</span> — Logwire Consulting — Houcem KHLIFI</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/xml.min.js"></script>
+<script>
+hljs.highlightAll();
+function copyCode(btn) {
+  const code = btn.closest('.code-wrapper').querySelector('code').innerText;
+  navigator.clipboard.writeText(code).then(() => { btn.textContent = '✓ Copié'; setTimeout(() => btn.textContent = 'Copier', 2000); });
+}
+localStorage.setItem('tp-05-done', 'true');
+</script>
+</body>
+</html>

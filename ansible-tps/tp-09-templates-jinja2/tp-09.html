@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TP 09 — Templates Jinja2 | Formation Ansible</title>
+  <meta name="description" content="TP 09 Ansible : Créer des fichiers de configuration dynamiques avec les templates Jinja2.">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/dracula.min.css" rel="stylesheet">
+  <link href="../assets/style.css" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-custom fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="../index.html"><span class="brand-icon"><i class="fas fa-terminal"></i></span> Ansible TPs</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" style="border-color:var(--border);"><span class="navbar-toggler-icon"></span></button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item"><a class="nav-link" href="../index.html"><i class="fas fa-home"></i> Accueil</a></li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">TPs 01-06</a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="../tp-01-installation/tp-01.html">TP 01 — Installation</a></li>
+            <li><a class="dropdown-item" href="../tp-02-inventaire/tp-02.html">TP 02 — Inventaire</a></li>
+            <li><a class="dropdown-item" href="../tp-03-adhoc/tp-03.html">TP 03 — Ad-Hoc</a></li>
+            <li><a class="dropdown-item" href="../tp-04-playbooks-base/tp-04.html">TP 04 — Playbooks</a></li>
+            <li><a class="dropdown-item" href="../tp-05-handlers/tp-05.html">TP 05 — Handlers</a></li>
+            <li><a class="dropdown-item" href="../tp-06-variables/tp-06.html">TP 06 — Variables</a></li>
+          </ul>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">TPs 07-12</a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="../tp-07-conditions/tp-07.html">TP 07 — Conditions</a></li>
+            <li><a class="dropdown-item" href="../tp-08-boucles/tp-08.html">TP 08 — Boucles</a></li>
+            <li><a class="dropdown-item active" href="tp-09.html">TP 09 — Templates</a></li>
+            <li><a class="dropdown-item" href="../tp-10-vault/tp-10.html">TP 10 — Vault</a></li>
+            <li><a class="dropdown-item" href="../tp-11-playbooks-multiples/tp-11.html">TP 11 — Multi-Playbooks</a></li>
+            <li><a class="dropdown-item" href="../tp-12-roles/tp-12.html">TP 12 — Roles</a></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<section class="tp-hero">
+  <div class="container">
+    <span class="tp-number"><i class="fas fa-hashtag"></i> TP 09</span>
+    <h1>Templates Jinja2</h1>
+    <p style="color:var(--text-secondary); max-width:700px;">Créer des fichiers de configuration dynamiques et personnalisés à l'aide du moteur de templating Jinja2, en intégrant des variables, des conditions et des boucles directement dans vos fichiers.</p>
+    <div class="meta-badges">
+      <span class="badge-level intermediate"><i class="fas fa-signal"></i> Intermédiaire</span>
+      <span class="badge-duration"><i class="fas fa-clock"></i> 50 minutes</span>
+    </div>
+  </div>
+</section>
+
+<section class="tp-content">
+  <div class="container">
+
+    <div class="section-block">
+      <h2><span class="section-icon"><i class="fas fa-bullseye"></i></span> Objectifs</h2>
+      <ul class="objective-list">
+        <li>Comprendre le fonctionnement du moteur Jinja2 avec Ansible</li>
+        <li>Créer des templates <code>.j2</code> utilisant des variables et des facts</li>
+        <li>Utiliser les structures de contrôle Jinja2 (if/else, for loops)</li>
+        <li>Déployer des fichiers de configuration dynamiques via le module <code>template</code></li>
+      </ul>
+    </div>
+
+    <div class="section-block">
+      <h2><span class="section-icon"><i class="fas fa-clipboard-check"></i></span> Prérequis</h2>
+      <ul><li>TPs 01 à 08 complétés, maîtrise des variables et facts</li></ul>
+    </div>
+
+    <div class="section-block">
+      <h2><span class="section-icon"><i class="fas fa-project-diagram"></i></span> Flux de données Template</h2>
+      <div class="architecture-box">
+Variables Playbook + Facts Système                   Fichier de destination
+          │                                           (Côté Client)
+          ▼                                                ▲
+┌─────────────────────┐    ┌─────────────────────┐         │
+│   ansible-playbook  │───▶│   Moteur Jinja2     │─────────┘
+└─────────────────────┘    └─────────────────────┘
+                                     ▲
+                                     │
+                           ┌─────────────────────┐
+                           │   Template (.j2)    │
+                           │   (Côté Serveur)    │
+                           └─────────────────────┘</div>
+    </div>
+
+    <div class="section-block">
+      <h2><span class="section-icon"><i class="fas fa-list-ol"></i></span> Étapes de réalisation</h2>
+
+      <div class="step-card">
+        <span class="step-number">1</span>
+        <h4>Créer le template Jinja2</h4>
+        <p>Le template utilise des doubles accolades <code>{{ }}</code> pour les variables et des accolades-pourcents <code>{% %}</code> pour les expressions de contrôle.</p>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="file-name"><i class="fas fa-file-code"></i> templates/index.html.j2</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+          </div>
+          <pre><code class="language-html">&lt;html&gt;
+  &lt;body&gt;
+    &lt;h2&gt;This computer hostname is {{ ansible_hostname }}&lt;/h2&gt;
+    &lt;h2&gt;The OS of this computer is {{ ansible_os_family }}&lt;/h2&gt;
+    &lt;h2&gt;IP Address: {{ ansible_default_ipv4.address }}&lt;/h2&gt;
+    &lt;h2&gt;This file version is {{ file_version }}&lt;/h2&gt;
+
+    {% if ansible_os_family == "Debian" %}
+      &lt;p&gt;Système Ubuntu/Debian détecté&lt;/p&gt;
+    {% else %}
+      &lt;p&gt;Système RedHat/CentOS détecté&lt;/p&gt;
+    {% endif %}
+
+    &lt;h3&gt;Interfaces Réseau :&lt;/h3&gt;
+    &lt;ul&gt;
+    {% for interface in ansible_interfaces %}
+      &lt;li&gt;{{ interface }}&lt;/li&gt;
+    {% endfor %}
+    &lt;/ul&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <span class="step-number">2</span>
+        <h4>Créer le playbook de déploiement</h4>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="file-name"><i class="fas fa-file-code"></i> template.yaml</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+          </div>
+          <pre><code class="language-yaml">---
+# Utilisation du module template pour générer un fichier dynamique
+- name: exemple avec template
+  hosts: all
+  become: true
+  vars:
+    file_version: "2.0"
+  tasks:
+    # Le module template traite le fichier .j2 avant de le copier
+    - name: ajout index.html dynamique
+      template:
+        src: templates/index.html.j2
+        dest: /var/www/html/index.html
+        mode: "0777"</code></pre>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <span class="step-number">3</span>
+        <h4>Exécuter et vérifier</h4>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="file-name"><i class="fas fa-terminal"></i> Terminal</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+          </div>
+          <pre><code class="language-bash"># Lancer le playbook
+ansible-playbook template.yaml
+
+# Vérifier le contenu généré sur le client
+curl http://localhost</code></pre>
+        </div>
+        <div class="console-output">
+<span class="output">&lt;html&gt;
+  &lt;body&gt;
+    &lt;h2&gt;This computer hostname is </span><span class="highlight">client-ubuntu-01</span><span class="output">&lt;/h2&gt;
+    &lt;h2&gt;The OS of this computer is </span><span class="highlight">Debian</span><span class="output">&lt;/h2&gt;
+    &lt;h2&gt;IP Address: </span><span class="highlight">192.168.1.10</span><span class="output">&lt;/h2&gt;
+...</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="key-points">
+      <h3><i class="fas fa-lightbulb"></i> Points clés à retenir</h3>
+      <ul>
+        <li><strong>Jinja2</strong> permet de rendre les fichiers statiques dynamiques.</li>
+        <li><strong>Variables :</strong> <code>{{ variable_name }}</code> injecte la valeur.</li>
+        <li><strong>Conditions :</strong> <code>{% if %} ... {% else %} ... {% endif %}</code>.</li>
+        <li><strong>Boucles :</strong> <code>{% for item in list %} ... {% endfor %}</code>.</li>
+        <li><strong>Module template :</strong> Contrairement à <code>copy</code>, il interprète le code Jinja2 avant le transfert.</li>
+      </ul>
+    </div>
+
+    <div class="tp-nav">
+      <a href="../tp-08-boucles/tp-08.html" class="btn-prev"><i class="fas fa-arrow-left"></i> TP 08 — Boucles</a>
+      <a href="../tp-10-vault/tp-10.html" class="btn-next">TP 10 — Vault <i class="fas fa-arrow-right"></i></a>
+    </div>
+
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <p>Formation DevOps par la pratique — <span class="footer-brand">Ansible</span> — Logwire Consulting — Houcem KHLIFI</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/xml.min.js"></script>
+<script>
+hljs.highlightAll();
+function copyCode(btn) {
+  const code = btn.closest('.code-wrapper').querySelector('code').innerText;
+  navigator.clipboard.writeText(code).then(() => { btn.textContent = '✓ Copié'; setTimeout(() => btn.textContent = 'Copier', 2000); });
+}
+localStorage.setItem('tp-09-done', 'true');
+</script>
+</body>
+</html>

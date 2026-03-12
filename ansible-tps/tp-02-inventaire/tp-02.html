@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TP 02 — Inventaire Ansible | Formation Ansible</title>
+  <meta name="description" content="TP 02 Ansible : Configurer l'inventaire statique en formats INI et YAML avec des groupes d'hôtes.">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/dracula.min.css" rel="stylesheet">
+  <link href="../assets/style.css" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-custom fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="../index.html"><span class="brand-icon"><i class="fas fa-terminal"></i></span> Ansible TPs</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" style="border-color:var(--border);"><span class="navbar-toggler-icon"></span></button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item"><a class="nav-link" href="../index.html"><i class="fas fa-home"></i> Accueil</a></li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">TPs 01-06</a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="../tp-01-installation/tp-01.html">TP 01 — Installation</a></li>
+            <li><a class="dropdown-item active" href="tp-02.html">TP 02 — Inventaire</a></li>
+            <li><a class="dropdown-item" href="../tp-03-adhoc/tp-03.html">TP 03 — Ad-Hoc</a></li>
+            <li><a class="dropdown-item" href="../tp-04-playbooks-base/tp-04.html">TP 04 — Playbooks</a></li>
+            <li><a class="dropdown-item" href="../tp-05-handlers/tp-05.html">TP 05 — Handlers</a></li>
+            <li><a class="dropdown-item" href="../tp-06-variables/tp-06.html">TP 06 — Variables</a></li>
+          </ul>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">TPs 07-12</a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="../tp-07-conditions/tp-07.html">TP 07 — Conditions</a></li>
+            <li><a class="dropdown-item" href="../tp-08-boucles/tp-08.html">TP 08 — Boucles</a></li>
+            <li><a class="dropdown-item" href="../tp-09-templates-jinja2/tp-09.html">TP 09 — Templates</a></li>
+            <li><a class="dropdown-item" href="../tp-10-vault/tp-10.html">TP 10 — Vault</a></li>
+            <li><a class="dropdown-item" href="../tp-11-playbooks-multiples/tp-11.html">TP 11 — Multi-Playbooks</a></li>
+            <li><a class="dropdown-item" href="../tp-12-roles/tp-12.html">TP 12 — Roles</a></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<section class="tp-hero">
+  <div class="container">
+    <span class="tp-number"><i class="fas fa-hashtag"></i> TP 02</span>
+    <h1>Inventaire Ansible</h1>
+    <p style="color:var(--text-secondary); max-width:700px;">Configurer l'inventaire statique en formats INI et YAML avec des groupes d'hôtes pour organiser votre infrastructure.</p>
+    <div class="meta-badges">
+      <span class="badge-level"><i class="fas fa-signal"></i> Débutant</span>
+      <span class="badge-duration"><i class="fas fa-clock"></i> 30 minutes</span>
+    </div>
+  </div>
+</section>
+
+<section class="tp-content">
+  <div class="container">
+
+    <div class="section-block">
+      <h2><span class="section-icon"><i class="fas fa-bullseye"></i></span> Objectifs</h2>
+      <ul class="objective-list">
+        <li>Comprendre le rôle de l'inventaire dans Ansible</li>
+        <li>Créer un inventaire statique au format INI</li>
+        <li>Créer un inventaire statique au format YAML</li>
+        <li>Organiser les hôtes par groupes logiques (webservers, tomcat, dbservers)</li>
+        <li>Tester la connectivité avec le module ping</li>
+      </ul>
+    </div>
+
+    <div class="section-block">
+      <h2><span class="section-icon"><i class="fas fa-clipboard-check"></i></span> Prérequis</h2>
+      <ul>
+        <li>TP 01 complété : Ansible installé, SSH configuré avec ansadmin</li>
+        <li>Au moins 2 machines cibles accessibles en SSH</li>
+      </ul>
+    </div>
+
+    <div class="section-block">
+      <h2><span class="section-icon"><i class="fas fa-network-wired"></i></span> Schéma d'architecture</h2>
+      <div class="architecture-box">
+┌─────────────────────┐
+│   ANSIBLE SERVER    │
+│   ansible.cfg       │──────┐
+│   inventory/hosts   │      │
+│   inventory/hosts.yml      │
+└─────────────────────┘      │
+                             │
+         ┌───────────────────┼───────────────────┐
+         ▼                   ▼                   ▼
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│ webservers  │    │   tomcat    │    │  dbservers  │
+│             │    │             │    │             │
+│ 192.168.1.10│    │ 192.168.1.20│    │ 192.168.1.30│
+│ 192.168.1.11│    │             │    │             │
+└─────────────┘    └─────────────┘    └─────────────┘</div>
+    </div>
+
+    <div class="section-block">
+      <h2><span class="section-icon"><i class="fas fa-list-ol"></i></span> Étapes de réalisation</h2>
+
+      <!-- Étape 1 -->
+      <div class="step-card">
+        <span class="step-number">1</span>
+        <h4>Créer la structure du projet</h4>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="file-name"><i class="fas fa-terminal"></i> Terminal</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+          </div>
+          <pre><code class="language-bash"># Créer le dossier du TP et le sous-dossier inventory
+mkdir -p tp-02-inventaire/inventory
+cd tp-02-inventaire</code></pre>
+        </div>
+      </div>
+
+      <!-- Étape 2 -->
+      <div class="step-card">
+        <span class="step-number">2</span>
+        <h4>Créer l'inventaire au format INI</h4>
+        <p>Le format INI est le format classique et le plus simple pour les inventaires Ansible :</p>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="file-name"><i class="fas fa-file-alt"></i> inventory/hosts (INI)</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+          </div>
+          <pre><code class="language-ini"># Groupe des serveurs web (Apache/Nginx)
+[webservers]
+192.168.1.10 ansible_user=ansadmin
+192.168.1.11 ansible_user=ansadmin
+
+# Groupe du serveur d'applications Tomcat
+[tomcat]
+192.168.1.20 ansible_user=ansadmin
+
+# Groupe des serveurs de base de données
+[dbservers]
+192.168.1.30 ansible_user=ansadmin
+
+# Variables communes à tous les hôtes
+[all:vars]
+ansible_ssh_private_key_file=~/.ssh/id_rsa</code></pre>
+        </div>
+      </div>
+
+      <!-- Étape 3 -->
+      <div class="step-card">
+        <span class="step-number">3</span>
+        <h4>Créer l'inventaire au format YAML</h4>
+        <p>Le format YAML offre plus de lisibilité et de structuration :</p>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="file-name"><i class="fas fa-file-code"></i> inventory/hosts.yml (YAML)</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+          </div>
+          <pre><code class="language-yaml"># Inventaire Ansible au format YAML
+# Structure hiérarchique avec groupes et sous-groupes
+all:
+  children:
+    # Groupe des serveurs web
+    webservers:
+      hosts:
+        web1:
+          ansible_host: 192.168.1.10
+          ansible_user: ansadmin
+        web2:
+          ansible_host: 192.168.1.11
+          ansible_user: ansadmin
+
+    # Groupe du serveur Tomcat
+    tomcat:
+      hosts:
+        app1:
+          ansible_host: 192.168.1.20
+          ansible_user: ansadmin
+
+    # Groupe des serveurs de base de données
+    dbservers:
+      hosts:
+        db1:
+          ansible_host: 192.168.1.30
+          ansible_user: ansadmin</code></pre>
+        </div>
+      </div>
+
+      <!-- Étape 4 -->
+      <div class="step-card">
+        <span class="step-number">4</span>
+        <h4>Configurer ansible.cfg</h4>
+        <p>Créez un fichier de configuration local pour pointer vers votre inventaire par défaut :</p>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="file-name"><i class="fas fa-cog"></i> ansible.cfg</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+          </div>
+          <pre><code class="language-ini">[defaults]
+# Chemin vers le fichier d'inventaire par défaut
+inventory = inventory/hosts
+# Désactiver la vérification des clés SSH (lab uniquement)
+host_key_checking = False
+# Utilisateur distant par défaut
+remote_user = ansadmin</code></pre>
+        </div>
+      </div>
+
+      <!-- Étape 5 -->
+      <div class="step-card">
+        <span class="step-number">5</span>
+        <h4>Tester la connectivité</h4>
+        <p>Utilisez le module <code>ping</code> pour vérifier la connexion vers tous les hôtes :</p>
+        <div class="code-wrapper">
+          <div class="code-header">
+            <span class="file-name"><i class="fas fa-terminal"></i> Terminal</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+          </div>
+          <pre><code class="language-bash"># Tester tous les hôtes
+ansible all -m ping
+
+# Tester un groupe spécifique
+ansible webservers -m ping
+
+# Tester avec un inventaire ad-hoc (liste d'IPs)
+ansible -i "192.168.1.10,192.168.1.11," -m ping all</code></pre>
+        </div>
+        <div class="console-output">
+<span class="prompt">ansadmin@server:~$</span> ansible all -m ping
+<span class="output">192.168.1.10 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python3"
+    },
+    "changed": false,
+    </span><span class="highlight">"ping": "pong"</span><span class="output">
+}
+192.168.1.11 | SUCCESS => {
+    "changed": false,
+    </span><span class="highlight">"ping": "pong"</span><span class="output">
+}</span>
+        </div>
+        <div class="info-box">
+          <i class="fas fa-info-circle"></i> La réponse <code>"ping": "pong"</code> confirme que la connexion SSH et Python fonctionnent correctement sur le client.
+        </div>
+      </div>
+    </div>
+
+    <div class="section-block">
+      <h2><span class="section-icon"><i class="fas fa-check-circle"></i></span> Résultat attendu</h2>
+      <p>Tous les hôtes de votre inventaire répondent <code>SUCCESS</code> avec <code>"ping": "pong"</code>. Vous pouvez cibler des groupes spécifiques pour des tâches ciblées.</p>
+    </div>
+
+    <div class="key-points">
+      <h3><i class="fas fa-lightbulb"></i> Points clés à retenir</h3>
+      <ul>
+        <li><strong>Deux formats d'inventaire</strong> : INI (simple) et YAML (structuré). Choisissez selon la complexité de votre infrastructure.</li>
+        <li><strong>Les groupes</strong> permettent de cibler des sous-ensembles de machines (<code>webservers</code>, <code>dbservers</code>).</li>
+        <li><strong>Le groupe <code>all</code></strong> englobe automatiquement tous les hôtes définis.</li>
+        <li><strong><code>[all:vars]</code></strong> définit des variables communes à toutes les machines.</li>
+        <li><strong><code>ansible.cfg</code></strong> dans le répertoire courant a la priorité sur <code>/etc/ansible/ansible.cfg</code>.</li>
+      </ul>
+    </div>
+
+    <div class="tp-nav">
+      <a href="../tp-01-installation/tp-01.html" class="btn-prev"><i class="fas fa-arrow-left"></i> TP 01 — Installation</a>
+      <a href="../tp-03-adhoc/tp-03.html" class="btn-next">TP 03 — Ad-Hoc <i class="fas fa-arrow-right"></i></a>
+    </div>
+
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <p>Formation DevOps par la pratique — <span class="footer-brand">Ansible</span> — Logwire Consulting — Houcem KHLIFI</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/ini.min.js"></script>
+<script>
+hljs.highlightAll();
+function copyCode(btn) {
+  const code = btn.closest('.code-wrapper').querySelector('code').innerText;
+  navigator.clipboard.writeText(code).then(() => { btn.textContent = '✓ Copié'; setTimeout(() => btn.textContent = 'Copier', 2000); });
+}
+localStorage.setItem('tp-02-done', 'true');
+</script>
+</body>
+</html>

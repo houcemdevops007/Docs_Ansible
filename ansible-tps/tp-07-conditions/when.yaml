@@ -1,0 +1,19 @@
+---
+# Condition avec register + is failed
+# register capture le résultat de la tâche dans une variable
+# when vérifie si la tâche précédente a échoué
+- name: exemple avec condition register
+  hosts: all
+  tasks:
+    # Tester si le fichier existe (la commande échoue si absent)
+    - name: tester si le fichier existe
+      shell: ls /home/ansadmin/resultat.txt
+      register: result
+      ignore_errors: true
+
+    # Créer le fichier uniquement s'il n'existe pas (échec de la tâche précédente)
+    - name: créer le fichier si absent
+      file:
+        path: /home/ansadmin/resultat.txt
+        state: touch
+      when: result is failed

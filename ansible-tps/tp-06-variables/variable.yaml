@@ -1,0 +1,14 @@
+---
+# Exemple d'utilisation des variables dans un playbook
+# Les variables sont définies dans la section vars
+# et référencées avec la syntaxe Jinja2 {{ nom_variable }}
+- name: example avec les variables
+  hosts: all
+  become: true
+  vars:
+    - var1: "Hello DevOps"
+    - var2: "Good Morning DevOps"
+  tasks:
+    # Utilisation des variables avec la syntaxe Jinja2 {{ }}
+    - name: echo text
+      shell: echo "var1 is {{ var1 }}, but var2 is {{ var2 }}" >> /home/ansadmin/example-variable.txt

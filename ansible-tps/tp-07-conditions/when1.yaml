@@ -1,0 +1,22 @@
+---
+# Condition when avec ansible_os_family
+# Permet d'adapter l'installation de packages selon le type d'OS
+# RedHat/CentOS → yum + httpd
+# Debian/Ubuntu → apt + apache2
+- name: exemple avec condition when os_family
+  hosts: all
+  become: true
+  tasks:
+    # Installer httpd sur les systèmes RedHat/CentOS
+    - name: install httpd on centos
+      yum:
+        name: httpd
+        state: latest
+      when: ansible_os_family == "RedHat"
+
+    # Installer apache2 sur les systèmes Debian/Ubuntu
+    - name: install apache2 on ubuntu
+      apt:
+        name: apache2
+        state: latest
+      when: ansible_os_family == "Debian"
