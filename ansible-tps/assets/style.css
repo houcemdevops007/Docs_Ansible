@@ -52,14 +52,42 @@ body {
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
-/* ===== Navbar ===== */
+/* ===== Premium Effects ===== */
+.bg-blobs {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  overflow: hidden;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.blob {
+  position: absolute;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.4;
+  animation: blob-float 20s infinite alternate;
+}
+
+.blob-1 { top: -10%; left: -10%; animation-delay: 0s; }
+.blob-2 { bottom: -10%; right: -10%; background: radial-gradient(circle, rgba(139, 233, 253, 0.1) 0%, transparent 70%); animation-delay: -5s; }
+
+@keyframes blob-float {
+  0% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(50px, 100px) scale(1.1); }
+  66% { transform: translate(-30px, -50px) scale(0.9); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+/* ===== Navbar Glassmorphism ===== */
 .navbar-custom {
-  background: rgba(24, 24, 37, 0.95) !important;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border);
-  padding: 0.6rem 0;
-  transition: var(--transition);
+  background: rgba(24, 24, 37, 0.7) !important;
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.8rem 0;
 }
 .navbar-custom .navbar-brand {
   font-weight: 800;
@@ -634,8 +662,82 @@ body {
 .animate-in:nth-child(5) { animation-delay: 0.5s; }
 .animate-in:nth-child(6) { animation-delay: 0.6s; }
 
-/* ===== Misc ===== */
-a { color: var(--accent-bright); text-decoration: none; transition: var(--transition); }
-a:hover { color: #fff; }
-.text-accent { color: var(--accent-bright); }
-.bg-accent-glow { background: var(--accent-glow); }
+/* ===== Signature Section ===== */
+.signature-section {
+  padding: 3rem 0;
+  text-align: center;
+  background: linear-gradient(to bottom, transparent, var(--bg-secondary));
+  border-top: 1px solid var(--border);
+}
+
+.signature-badge {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.signature-name {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  background: var(--gradient-accent);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 0;
+}
+
+.signature-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+}
+
+/* ===== Enhanced Hero ===== */
+.index-hero {
+  padding: 8rem 0 6rem;
+  background: radial-gradient(circle at 50% 100%, rgba(238, 0, 0, 0.15), var(--bg-primary) 70%);
+}
+
+.index-hero h1 {
+  font-size: 4rem;
+  text-shadow: 0 0 30px rgba(238, 0, 0, 0.3);
+}
+
+/* ===== Floating Animation ===== */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.floating-icon {
+  animation: float 3s ease-in-out infinite;
+  display: inline-block;
+}
+
+/* ===== Card Enhancements ===== */
+.tp-card {
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.tp-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 15px 40px rgba(238, 0, 0, 0.15);
+}
+
+/* ===== Footer adjustments ===== */
+.footer {
+  padding: 3rem 0;
+}
+
+/* ===== Responsive Fixes ===== */
+@media (max-width: 768px) {
+  .index-hero h1 { font-size: 2.5rem; }
+  .signature-name { font-size: 1rem; }
+}
